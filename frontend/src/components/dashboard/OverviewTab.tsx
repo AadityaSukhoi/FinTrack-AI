@@ -1,260 +1,169 @@
-import { Card } from "@/components/ui/card";
-import {
-  TrendingUp,
-  TrendingDown,
-  Wallet,
-  Target,
-  ArrowUpRight,
-  ArrowDownRight,
-  Sparkles,
-} from "lucide-react";
-import {
-  LineChart,
-  Line,
-  PieChart,
-  Pie,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowUpRight, ArrowDownRight, Wallet, TrendingUp, TrendingDown } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-const OverviewTab = () => {
-  const expenseData = [
-    { month: "Jan", expenses: 32000, income: 65000 },
-    { month: "Feb", expenses: 28000, income: 65000 },
-    { month: "Mar", expenses: 35000, income: 70000 },
-    { month: "Apr", expenses: 31000, income: 70000 },
-    { month: "May", expenses: 38000, income: 75000 },
-    { month: "Jun", expenses: 32450, income: 85000 },
-  ];
+interface OverviewTabProps {
+  data: any;
+  isLoading: boolean;
+}
 
-  const categoryData = [
-    { name: "Food & Dining", value: 12500, color: "#14b8a6" },
-    { name: "Transportation", value: 8200, color: "#0ea5e9" },
-    { name: "Shopping", value: 6300, color: "#8b5cf6" },
-    { name: "Bills & Utilities", value: 4200, color: "#f59e0b" },
-    { name: "Entertainment", value: 1250, color: "#ec4899" },
-  ];
+const OverviewTab = ({ data, isLoading }: OverviewTabProps) => {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading dashboard data...</p>
+      </div>
+    );
+  }
 
-  const aiRecommendations = [
-    {
-      title: "Reduce Dining Out",
-      description:
-        "You've spent 23% more on dining this month. Consider cooking at home to save ₹3,500.",
-      impact: "High",
-      icon: "🍽️",
-    },
-    {
-      title: "Great Savings!",
-      description:
-        "You're ₹5,200 under budget this month. Perfect time to boost your emergency fund!",
-      impact: "Positive",
-      icon: "🎉",
-    },
-    {
-      title: "Upcoming Bill",
-      description:
-        "Your internet bill of ₹999 is due in 3 days. Make sure you have sufficient balance.",
-      impact: "Medium",
-      icon: "📅",
-    },
-  ];
+  if (!data) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">No dashboard data available</p>
+          <p className="text-sm text-muted-foreground">
+            Please set up your profile and add some transactions to see insights
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const { stats, category_breakdown, monthly_trend, recent_transactions } = data;
 
   return (
     <div className="space-y-6">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="p-6 gradient-primary text-white shadow-medium hover:shadow-strong transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-white/80 text-sm mb-1">Total Balance</p>
-              <p className="text-3xl font-bold">₹1,24,580</p>
-            </div>
-            <div className="bg-white/20 p-2 rounded-lg">
-              <Wallet className="w-6 h-6" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <ArrowUpRight className="w-4 h-4" />
-            <span>+12.5% from last month</span>
-          </div>
+      {/* Stats Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {/* Total Balance */}
+        <Card className="gradient-primary text-white">
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Total Balance</CardTitle>
+            <Wallet className="w-5 h-5" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{stats.total_balance.toLocaleString()}</div>
+            <p className="text-xs text-white/80 flex items-center gap-1 mt-1">
+              <ArrowUpRight className="w-4 h-4" />
+              +12.5% from last month
+            </p>
+          </CardContent>
         </Card>
 
-        <Card className="p-6 bg-card shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-muted-foreground text-sm mb-1">Income (June)</p>
-              <p className="text-3xl font-bold text-success">₹85,000</p>
-            </div>
-            <div className="bg-success/10 p-2 rounded-lg">
-              <TrendingUp className="w-6 h-6 text-success" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-success">
-            <ArrowUpRight className="w-4 h-4" />
-            <span>+5.2% increase</span>
-          </div>
+        {/* Income */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Income (Current Month)</CardTitle>
+            <TrendingUp className="w-5 h-5 text-green-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-green-600">₹{stats.total_income.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              <ArrowUpRight className="w-4 h-4" />
+              +{stats.income_change_percent.toFixed(1)}% increase
+            </p>
+          </CardContent>
         </Card>
 
-        <Card className="p-6 bg-card shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-muted-foreground text-sm mb-1">Expenses (June)</p>
-              <p className="text-3xl font-bold text-destructive">₹32,450</p>
-            </div>
-            <div className="bg-destructive/10 p-2 rounded-lg">
-              <TrendingDown className="w-6 h-6 text-destructive" />
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-success">
-            <ArrowDownRight className="w-4 h-4" />
-            <span>-8.3% decrease</span>
-          </div>
+        {/* Expenses */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Expenses (Current Month)</CardTitle>
+            <TrendingDown className="w-5 h-5 text-red-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-red-600">₹{stats.total_expenses.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+              <ArrowDownRight className="w-4 h-4" />
+              {stats.expense_change_percent.toFixed(1)}% decrease
+            </p>
+          </CardContent>
         </Card>
 
-        <Card className="p-6 bg-card shadow-soft hover:shadow-medium transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <p className="text-muted-foreground text-sm mb-1">Budget Left</p>
-              <p className="text-3xl font-bold text-primary">₹18,560</p>
+        {/* Budget Left */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Budget Left</CardTitle>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              🎯
             </div>
-            <div className="bg-primary/10 p-2 rounded-lg">
-              <Target className="w-6 h-6 text-primary" />
-            </div>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            62% of monthly budget remaining
-          </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">₹{stats.budget_left.toLocaleString()}</div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {stats.budget_usage_percent.toFixed(0)}% of monthly budget remaining
+            </p>
+          </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Expense Trend */}
-        <Card className="lg:col-span-2 p-6 shadow-soft">
-          <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Income vs Expenses
-          </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={expenseData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="income"
-                stroke="hsl(var(--success))"
-                strokeWidth={3}
-                dot={{ fill: "hsl(var(--success))", r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="expenses"
-                stroke="hsl(var(--destructive))"
-                strokeWidth={3}
-                dot={{ fill: "hsl(var(--destructive))", r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+      {/* Charts */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Income vs Expenses Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5" />
+              Income vs Expenses
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={monthly_trend}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Line type="monotone" dataKey="income" stroke="#10b981" strokeWidth={2} />
+                <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} />
+              </LineChart>
+            </ResponsiveContainer>
+          </CardContent>
         </Card>
 
         {/* Category Breakdown */}
-        <Card className="p-6 shadow-soft">
-          <h2 className="text-xl font-semibold mb-6">By Category</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={categoryData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
-            </PieChart>
-          </ResponsiveContainer>
-          <div className="space-y-2 mt-4">
-            {categoryData.map((cat, idx) => (
-              <div key={idx} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: cat.color }}
-                  ></div>
-                  <span className="text-muted-foreground">{cat.name}</span>
+        <Card>
+          <CardHeader>
+            <CardTitle>By Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={category_breakdown}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="amount"
+                  label={(entry) => entry.category}
+                >
+                  {category_breakdown.map((entry: any, index: number) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              {category_breakdown.map((cat: any) => (
+                <div key={cat.category} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                    />
+                    <span>{cat.category}</span>
+                  </div>
+                  <span className="font-semibold">₹{cat.amount.toLocaleString()}</span>
                 </div>
-                <span className="font-semibold">₹{cat.value.toLocaleString()}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </CardContent>
         </Card>
       </div>
-
-      {/* AI Recommendations */}
-      <Card className="p-6 shadow-soft">
-        <h2 className="text-xl font-semibold mb-6 flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          AI-Powered Insights
-        </h2>
-        <div className="space-y-4">
-          {aiRecommendations.map((rec, idx) => (
-            <div
-              key={idx}
-              className={`p-4 rounded-xl border transition-all duration-300 hover:shadow-soft ${
-                rec.impact === "Positive"
-                  ? "bg-success/5 border-success/20"
-                  : rec.impact === "High"
-                  ? "bg-destructive/5 border-destructive/20"
-                  : "bg-primary/5 border-primary/20"
-              }`}
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-2xl">{rec.icon}</span>
-                <div className="flex-1">
-                  <h3 className="font-semibold mb-1">{rec.title}</h3>
-                  <p className="text-sm text-muted-foreground">{rec.description}</p>
-                </div>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    rec.impact === "Positive"
-                      ? "bg-success/20 text-success"
-                      : rec.impact === "High"
-                      ? "bg-destructive/20 text-destructive"
-                      : "bg-primary/20 text-primary"
-                  }`}
-                >
-                  {rec.impact}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 };
