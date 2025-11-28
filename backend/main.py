@@ -2,9 +2,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from database.db import Base, engine
-from utils.logger import logger
-from auth.routes import router as auth_router
+from backend.database.db import Base, engine
+from backend.utils.logger import logger
+from backend.auth.routes import router as auth_router
+from dotenv import load_dotenv
+
+# Import finance routers DIRECTLY
+from backend.finance.routes_dashboard import router as dashboard_router
+from backend.finance.routes_transactions import router as transactions_router
+from backend.finance.routes_categories import router as categories_router
+
+# Load environment variables FIRST
+load_dotenv()
 
 # ---------- Lifespan Handler ----------
 @asynccontextmanager
@@ -27,14 +36,29 @@ app = FastAPI(
 # ---------- CORS Middleware ----------
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:8080",    
+        "http://127.0.0.1:8080",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ---------- Include Routers ----------
+# ---------- Include Routers DIRECTLY ----------
 app.include_router(auth_router)
+logger.info("✅ Auth router included")
+
+app.include_router(dashboard_router, prefix="/api/dashboard")
+logger.info("✅ Dashboard router included")
+
+app.include_router(transactions_router, prefix="/api/transactions")
+logger.info("✅ Transactions router included")
+
+app.include_router(categories_router, prefix="/api/categories")
+logger.info("✅ Categories router included")
 
 # ---------- Root & Favicon ----------
 @app.get("/", summary="Welcome endpoint")
