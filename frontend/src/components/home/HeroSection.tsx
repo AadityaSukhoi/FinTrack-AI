@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, Sparkle, TrendingUp } from "lucide-react";
 
 const HeroSection = () => {
   return (
@@ -17,7 +17,7 @@ const HeroSection = () => {
           {/* Left Content */}
           <div className="text-center lg:text-left animate-slide-up">
             <div className="inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full mb-6 shadow-soft">
-              <Sparkles className="w-4 h-4" />
+              <img src="/NoBg.png" alt="logo" className="w-4 h-4" />
               <span className="text-sm font-medium">AI-Powered Finance Management</span>
             </div>
 
@@ -110,7 +110,7 @@ const HeroSection = () => {
                 {/* AI Insight Badge */}
                 <div className="bg-accent/10 border border-accent/20 rounded-xl p-4 flex items-start gap-3">
                   <div className="bg-accent/20 p-2 rounded-lg">
-                    <Sparkles className="w-4 h-4 text-accent" />
+                    <img src="/NoBg.png" alt="logo" className="w-4 h-4 text-accent" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm mb-1">AI Insight</p>

@@ -3,7 +3,7 @@
 // import { Button } from "@/components/ui/button";
 // import { Input } from "@/components/ui/input";
 // import { Label } from "@/components/ui/label";
-// import { Sparkles, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+// import { img src="/NoBg.png" alt="logo", Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 // import { useToast } from "@/hooks/use-toast";
 // import axios from "axios"; 
 // import { GoogleLogin } from "@react-oauth/google";
@@ -126,7 +126,7 @@
 //           {/* Logo */}
 //           <Link to="/" className="flex items-center gap-2 mb-8">
 //             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
-//               <Sparkles className="w-6 h-6 text-white" />
+//               <img src="/NoBg.png" alt="logo" className="w-6 h-6 text-white" />
 //             </div>
 //             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
 //               FinTrack AI
@@ -356,7 +356,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Sparkles, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
+import { Sparkle, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import axios from "axios";
 import { GoogleLogin } from "@react-oauth/google";
@@ -545,7 +545,7 @@ const Auth = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 mb-8">
             <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
-              <Sparkles className="w-6 h-6 text-white" />
+              <img src="/NoBg.png" alt="logo" className="w-6 h-6 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               FinTrack AI
