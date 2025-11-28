@@ -10,6 +10,8 @@ import GoalsManager from "@/components/dashboard/GoalsManager";
 import ForecastView from "@/components/dashboard/ForecastView";
 import ReportsView from "@/components/dashboard/ReportsView";
 import OverviewTab from "@/components/dashboard/OverviewTab";
+import TransactionsPage from "@/components/dashboard/TransactionsPage";
+
 import {
   LayoutDashboard,
   Wallet,
@@ -224,8 +226,9 @@ const Dashboard = () => {
           ) : (
             <>
               <Tabs defaultValue="overview" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+                <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="transactions">Transactions</TabsTrigger>
                   <TabsTrigger value="budget">Budget</TabsTrigger>
                   <TabsTrigger value="goals">Goals</TabsTrigger>
                   <TabsTrigger value="forecast">Forecast</TabsTrigger>
@@ -242,6 +245,11 @@ const Dashboard = () => {
                 <TabsContent value="budget">
                   <BudgetManager />
                 </TabsContent>
+                
+                <TabsContent value="transactions" className="animate-fade-in">
+                  <TransactionsPage />
+                </TabsContent>  
+
 
                 <TabsContent value="goals">
                   <GoalsManager />
