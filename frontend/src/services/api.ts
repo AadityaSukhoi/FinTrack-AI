@@ -88,4 +88,7 @@ export const updateBudget = (id: string, data: any) =>
 export const deleteBudget = (id: string) => 
   api.delete(`/budgets/${id}`);
 
+export const getForecast = () =>
+  api.get('/dashboard/forecast');
+
 export default api;
