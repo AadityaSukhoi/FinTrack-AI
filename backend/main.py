@@ -11,6 +11,7 @@ from backend.finance.routes_dashboard import router as dashboard_router
 from backend.finance.routes_transactions import router as transactions_router
 from backend.finance.routes_categories import router as categories_router
 from backend.finance.routes_budgets import router as budgets_router
+from backend.finance.routes_forecast import router as forecast_router
 
 from dotenv import load_dotenv
 
@@ -64,6 +65,10 @@ logger.info("✅ Categories router included")
 # Budgets router **already** has prefix="/api/budgets"
 app.include_router(budgets_router)
 logger.info("✅ Budgets router included")
+
+app.include_router(forecast_router)
+logger.info("✅ Forecast router included")
+
 
 # ---------- Root & Favicon ----------
 @app.get("/", summary="Welcome endpoint")
