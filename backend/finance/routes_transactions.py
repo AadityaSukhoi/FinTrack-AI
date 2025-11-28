@@ -3,13 +3,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 import uuid
 
 from backend.database.db import get_db
 from backend.dependencies import get_current_user
 from backend.auth.models import User
-from backend.finance.models import Transaction
+from backend.finance.models import Transaction, TransactionType, Budget
 from backend.finance.schemas import (
     TransactionCreate,
     TransactionUpdate,
@@ -18,18 +18,78 @@ from backend.finance.schemas import (
 from backend.utils.cache import Cache, get_cache_key
 from backend.utils.logger import logger
 
-router = APIRouter(tags=["Transactions"])
+router = APIRouter(prefix="/api/transactions", tags=["Transactions"])
 
 
-# ==================== CREATE TRANSACTION ====================
+# ======================================================
+# 🔥 UPDATE BUDGET WHEN EXPENSE OCCURS
+# ======================================================
+def update_budget_after_expense(db: Session, transaction: Transaction):
+    """Updates spent_amount when expense is added"""
+    if transaction.type != TransactionType.EXPENSE:
+        return
+
+    budget = (
+        db.query(Budget)
+        .filter(
+            Budget.user_id == transaction.user_id,
+            Budget.category == transaction.category
+        )
+        .first()
+    )
+
+    if not budget:
+        logger.info(f"No budget found for category {transaction.category}")
+        return
+
+    budget.spent_amount += transaction.amount
+    db.commit()
+    db.refresh(budget)
+
+    # Invalidate budget cache
+    from backend.finance.routes_budgets import redis_client
+    redis_client.delete(f"budgets:{transaction.user_id}")
+
+    logger.info(
+        f"Budget updated: {budget.category} {budget.spent_amount}/{budget.limit_amount}"
+    )
+
+
+def revert_budget_after_delete(db: Session, transaction: Transaction):
+    """Revert spent_amount when an expense is deleted"""
+    if transaction.type != TransactionType.EXPENSE:
+        return
+
+    budget = (
+        db.query(Budget)
+        .filter(
+            Budget.user_id == transaction.user_id,
+            Budget.category == transaction.category
+        )
+        .first()
+    )
+
+    if not budget:
+        return
+
+    # prevent negative spent
+    budget.spent_amount = max(0, budget.spent_amount - transaction.amount)
+    db.commit()
+
+    from backend.finance.routes_budgets import redis_client
+    redis_client.delete(f"budgets:{transaction.user_id}")
+
+
+# ======================================================
+# CREATE TRANSACTION
+# ======================================================
 @router.post("/", response_model=TransactionOut, status_code=201)
 def create_transaction(
     transaction: TransactionCreate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Create a new transaction"""
-    logger.info(f"Creating transaction for user {current_user.id}")
+    logger.info(f"Creating transaction for {current_user.id}")
 
     new_transaction = Transaction(
         id=str(uuid.uuid4()),
@@ -46,19 +106,22 @@ def create_transaction(
         db.commit()
         db.refresh(new_transaction)
 
-        # Clear user's cache
+        # update budgets if required
+        update_budget_after_expense(db, new_transaction)
+
         Cache.clear_user_cache(current_user.id)
 
-        logger.info(f"✅ Transaction created: {new_transaction.id}")
-        return new_transaction
+        return TransactionOut.from_orm(new_transaction)
 
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Failed to create transaction: {e}")
+        logger.error(f"Error creating transaction: {e}")
         raise HTTPException(status_code=500, detail="Failed to create transaction")
 
 
-# ==================== GET ALL TRANSACTIONS ====================
+# ======================================================
+# GET ALL TRANSACTIONS
+# ======================================================
 @router.get("/", response_model=List[TransactionOut])
 def get_transactions(
     skip: int = Query(0, ge=0),
@@ -70,10 +133,8 @@ def get_transactions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get all transactions with optional filters"""
-    logger.info(f"Fetching transactions for user {current_user.id}")
+    logger.info(f"Fetching transactions for {current_user.id}")
 
-    # Build cache key
     cache_key = get_cache_key(
         current_user.id,
         "transactions",
@@ -81,16 +142,15 @@ def get_transactions(
         limit,
         type or "all",
         category or "all",
-        start_date or "none",
-        end_date or "none",
+        str(start_date) if start_date else "none",
+        str(end_date) if end_date else "none",
     )
 
-    # Try cache first
     cached = Cache.get(cache_key)
     if cached:
+        logger.info("Transactions served from cache")
         return cached
 
-    # Query database
     query = db.query(Transaction).filter(Transaction.user_id == current_user.id)
 
     if type:
@@ -104,24 +164,22 @@ def get_transactions(
 
     transactions = query.order_by(Transaction.date.desc()).offset(skip).limit(limit).all()
 
-    # Convert to dict for caching
-    result = [TransactionOut.from_orm(t).dict() for t in transactions]
+    result = [TransactionOut.from_orm(t).model_dump() for t in transactions]
 
-    # Cache for 5 minutes
     Cache.set(cache_key, result, ttl=300)
 
-    logger.info(f"✅ Fetched {len(transactions)} transactions")
-    return transactions
+    return [TransactionOut.from_orm(t) for t in transactions]
 
 
-# ==================== GET SINGLE TRANSACTION ====================
+# ======================================================
+# GET SINGLE TRANSACTION
+# ======================================================
 @router.get("/{transaction_id}", response_model=TransactionOut)
 def get_transaction(
     transaction_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Get a specific transaction"""
     transaction = (
         db.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == current_user.id)
@@ -131,10 +189,12 @@ def get_transaction(
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    return transaction
+    return TransactionOut.from_orm(transaction)
 
 
-# ==================== UPDATE TRANSACTION ====================
+# ======================================================
+# UPDATE TRANSACTION
+# ======================================================
 @router.put("/{transaction_id}", response_model=TransactionOut)
 def update_transaction(
     transaction_id: str,
@@ -142,9 +202,6 @@ def update_transaction(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Update a transaction"""
-    logger.info(f"Updating transaction {transaction_id}")
-
     transaction = (
         db.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == current_user.id)
@@ -154,8 +211,8 @@ def update_transaction(
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    # Update fields
     update_data = transaction_update.dict(exclude_unset=True)
+
     for field, value in update_data.items():
         setattr(transaction, field, value)
 
@@ -163,28 +220,24 @@ def update_transaction(
         db.commit()
         db.refresh(transaction)
 
-        # Clear user's cache
         Cache.clear_user_cache(current_user.id)
 
-        logger.info(f"✅ Transaction updated: {transaction_id}")
-        return transaction
+        return TransactionOut.from_orm(transaction)
 
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Failed to update transaction: {e}")
         raise HTTPException(status_code=500, detail="Failed to update transaction")
 
 
-# ==================== DELETE TRANSACTION ====================
+# ======================================================
+# DELETE TRANSACTION
+# ======================================================
 @router.delete("/{transaction_id}", status_code=204)
 def delete_transaction(
     transaction_id: str,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Delete a transaction"""
-    logger.info(f"Deleting transaction {transaction_id}")
-
     transaction = (
         db.query(Transaction)
         .filter(Transaction.id == transaction_id, Transaction.user_id == current_user.id)
@@ -195,15 +248,15 @@ def delete_transaction(
         raise HTTPException(status_code=404, detail="Transaction not found")
 
     try:
+        revert_budget_after_delete(db, transaction)
+
         db.delete(transaction)
         db.commit()
 
-        # Clear user's cache
         Cache.clear_user_cache(current_user.id)
 
-        logger.info(f"✅ Transaction deleted: {transaction_id}")
+        logger.info(f"Deleted transaction {transaction_id}")
 
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Failed to delete transaction: {e}")
         raise HTTPException(status_code=500, detail="Failed to delete transaction")
