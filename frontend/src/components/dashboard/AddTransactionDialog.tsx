@@ -18,24 +18,16 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Plus } from "lucide-react";
-
-interface Transaction {
-  id: string;
-  name: string;
-  category: string;
-  amount: number;
-  date: string;
-  type: "income" | "expense";
-}
+import { createTransaction } from "@/services/api";
 
 interface AddTransactionDialogProps {
-  onAdd: (transaction: Transaction) => void;
+  onAdd: () => void; // Only triggers dashboard refresh
 }
 
 const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    description: "",
     category: "",
     amount: "",
     type: "expense" as "income" | "expense",
@@ -56,10 +48,10 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
     income: ["Salary", "Freelance", "Investment", "Business", "Other"],
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.category || !formData.amount) {
+    if (!formData.description || !formData.category || !formData.amount) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -78,24 +70,47 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
       return;
     }
 
-    const newTransaction: Transaction = {
-      id: Date.now().toString(),
-      name: formData.name,
-      category: formData.category,
-      amount: formData.type === "expense" ? -amount : amount,
-      date: new Date().toISOString(),
+    // Final payload that matches the backend schema exactly
+    const payload = {
       type: formData.type,
+      description: formData.description,
+      category: formData.category,
+      amount: amount, // ALWAYS POSITIVE
+      date: new Date().toISOString(),
     };
 
-    onAdd(newTransaction);
+    try {
+      await createTransaction(payload);
 
-    toast({
-      title: "Success",
-      description: `${formData.type === "income" ? "Income" : "Expense"} added successfully`,
-    });
+      toast({
+        title: "Success",
+        description: `${
+          formData.type === "income" ? "Income" : "Expense"
+        } added successfully`,
+      });
 
-    setFormData({ name: "", category: "", amount: "", type: "expense" });
-    setOpen(false);
+      // Refresh dashboard AFTER backend success
+      onAdd();
+
+      // Reset form + close modal
+      setFormData({
+        description: "",
+        category: "",
+        amount: "",
+        type: "expense",
+      });
+      setOpen(false);
+    } catch (error: any) {
+      console.error("Failed to create transaction:", error);
+
+      toast({
+        title: "Error",
+        description:
+          error?.response?.data?.detail ||
+          "Failed to create transaction. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -110,9 +125,11 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
         <DialogHeader>
           <DialogTitle>Add New Transaction</DialogTitle>
         </DialogHeader>
+
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Type */}
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label>Type</Label>
             <Select
               value={formData.type}
               onValueChange={(value: "income" | "expense") =>
@@ -129,20 +146,21 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
             </Select>
           </div>
 
+          {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="name">Description</Label>
+            <Label>Description</Label>
             <Input
-              id="name"
               placeholder="e.g., Grocery Shopping"
-              value={formData.name}
+              value={formData.description}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData({ ...formData, description: e.target.value })
               }
             />
           </div>
 
+          {/* Category */}
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label>Category</Label>
             <Select
               value={formData.category}
               onValueChange={(value) =>
@@ -162,10 +180,10 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
             </Select>
           </div>
 
+          {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount (₹)</Label>
+            <Label>Amount (₹)</Label>
             <Input
-              id="amount"
               type="number"
               placeholder="0.00"
               step="0.01"
@@ -176,6 +194,7 @@ const AddTransactionDialog = ({ onAdd }: AddTransactionDialogProps) => {
             />
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <Button
               type="button"
