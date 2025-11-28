@@ -71,4 +71,21 @@ export const createCategory = (data: any) =>
 export const deleteCategory = (id: string) =>
   api.delete(`/categories/${id}`);
 
+// ==================== BUDGETS ====================
+
+// GET all budgets
+export const getBudgets = () => api.get("/budgets");
+
+// CREATE a budget
+export const createBudget = (data: any) =>
+  api.post("/budgets", data);
+
+// UPDATE a budget
+export const updateBudget = (id: string, data: any) =>
+  api.put(`/budgets/${id}`, data);
+
+// DELETE a budget
+export const deleteBudget = (id: string) => 
+  api.delete(`/budgets/${id}`);
+
 export default api;

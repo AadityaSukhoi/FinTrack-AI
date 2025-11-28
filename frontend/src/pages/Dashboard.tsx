@@ -6,7 +6,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import AddTransactionDialog from "@/components/dashboard/AddTransactionDialog";
 import ProfileSetupDialog from "@/components/dashboard/ProfileSetupDialog";
 import BudgetManager from "@/components/dashboard/BudgetManager";
-import GoalsManager from "@/components/dashboard/GoalsManager";
 import ForecastView from "@/components/dashboard/ForecastView";
 import ReportsView from "@/components/dashboard/ReportsView";
 import OverviewTab from "@/components/dashboard/OverviewTab";
@@ -226,11 +225,10 @@ const Dashboard = () => {
           ) : (
             <>
               <Tabs defaultValue="overview" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:inline-grid">
+                <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="transactions">Transactions</TabsTrigger>
                   <TabsTrigger value="budget">Budget</TabsTrigger>
-                  <TabsTrigger value="goals">Goals</TabsTrigger>
                   <TabsTrigger value="forecast">Forecast</TabsTrigger>
                   <TabsTrigger value="reports">Reports</TabsTrigger>
                 </TabsList>
@@ -251,9 +249,6 @@ const Dashboard = () => {
                 </TabsContent>  
 
 
-                <TabsContent value="goals">
-                  <GoalsManager />
-                </TabsContent>
 
                 <TabsContent value="forecast">
                   <ForecastView />
