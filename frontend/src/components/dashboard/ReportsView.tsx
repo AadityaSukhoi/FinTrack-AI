@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -7,7 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, FileText, TrendingUp, Calendar } from "lucide-react";
+
+import {
+  Download,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+} from "lucide-react";
+
 import {
   BarChart,
   Bar,
@@ -23,60 +31,107 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
+
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
+import { getReports } from "@/services/api";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const COLORS = [
+  "#14b8a6",
+  "#0ea5e9",
+  "#8b5cf6",
+  "#f59e0b",
+  "#ec4899",
+  "#22c55e",
+  "#ef4444",
+];
 
 const ReportsView = () => {
-  const [period, setPeriod] = useState("monthly");
+  const [period, setPeriod] = useState("6");
   const { toast } = useToast();
 
-  const monthlyData = [
-    { month: "Jan", income: 65000, expenses: 32000, savings: 33000 },
-    { month: "Feb", income: 65000, expenses: 28000, savings: 37000 },
-    { month: "Mar", income: 70000, expenses: 35000, savings: 35000 },
-    { month: "Apr", income: 70000, expenses: 31000, savings: 39000 },
-    { month: "May", income: 75000, expenses: 38000, savings: 37000 },
-    { month: "Jun", income: 85000, expenses: 32450, savings: 52550 },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [report, setReport] = useState<any>(null);
 
-  const categoryData = [
-    { name: "Food & Dining", value: 12500, color: "#14b8a6" },
-    { name: "Transportation", value: 8200, color: "#0ea5e9" },
-    { name: "Shopping", value: 6300, color: "#8b5cf6" },
-    { name: "Bills & Utilities", value: 4200, color: "#f59e0b" },
-    { name: "Entertainment", value: 1250, color: "#ec4899" },
-  ];
+  useEffect(() => {
+    const loadReports = async () => {
+      setLoading(true);
+      try {
+        const res = await getReports(Number(period));
+        setReport(res.data);
+      } catch (err) {
+        console.error(err);
+        toast({
+          title: "Error",
+          description: "Failed to load reports.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDownloadReport = () => {
+    loadReports();
+  }, [period]);
+
+  const handleDownload = () => {
     toast({
-      title: "Report Downloaded",
-      description: "Your financial report has been downloaded as PDF",
+      title: "Download Started",
+      description: "PDF export feature coming soon!",
     });
   };
 
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-40 w-full" />
+        <Skeleton className="h-80 w-full" />
+      </div>
+    );
+  }
+
+  if (!report) {
+    return (
+      <Card className="p-6 text-center">
+        <p className="text-muted-foreground">No report data available.</p>
+      </Card>
+    );
+  }
+
+  const {
+    summary,
+    monthly_overview,
+    savings_trend,
+    expense_distribution,
+    best_performance,
+    next_milestone,
+  } = report;
+
   const stats = [
     {
-      label: "Total Income (6M)",
-      value: "₹4,30,000",
-      change: "+15.2%",
-      trend: "up",
+      label: "Total Income",
+      value: `₹${summary.total_income.toLocaleString()}`,
+      change: "",
+      trend: summary.total_income >= 0 ? "up" : "down",
     },
     {
-      label: "Total Expenses (6M)",
-      value: "₹1,96,450",
-      change: "-3.5%",
+      label: "Total Expenses",
+      value: `₹${summary.total_expenses.toLocaleString()}`,
+      change: "",
       trend: "down",
     },
     {
-      label: "Total Savings (6M)",
-      value: "₹2,33,550",
-      change: "+28.7%",
-      trend: "up",
+      label: "Total Savings",
+      value: `₹${summary.total_savings.toLocaleString()}`,
+      change: "",
+      trend: summary.total_savings >= 0 ? "up" : "down",
     },
     {
       label: "Avg. Monthly Savings",
-      value: "₹38,925",
-      change: "+12.4%",
+      value: `₹${Math.round(summary.average_monthly_savings).toLocaleString()}`,
+      change: "",
       trend: "up",
     },
   ];
@@ -89,21 +144,23 @@ const ReportsView = () => {
           <div>
             <h2 className="text-2xl font-bold mb-2">Financial Reports</h2>
             <p className="text-muted-foreground">
-              Comprehensive analysis of your financial activity
+              Comprehensive analysis of your finances
             </p>
           </div>
+
           <div className="flex gap-3">
             <Select value={period} onValueChange={setPeriod}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue />
+                <SelectValue placeholder="Select period" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="monthly">Last 6 Months</SelectItem>
-                <SelectItem value="yearly">Yearly</SelectItem>
-                <SelectItem value="quarterly">Quarterly</SelectItem>
+                <SelectItem value="3">Last 3 Months</SelectItem>
+                <SelectItem value="6">Last 6 Months</SelectItem>
+                <SelectItem value="12">Last 12 Months</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="hero" onClick={handleDownloadReport} className="gap-2">
+
+            <Button variant="hero" onClick={handleDownload} className="gap-2">
               <Download className="w-4 h-4" />
               Export PDF
             </Button>
@@ -111,138 +168,105 @@ const ReportsView = () => {
         </div>
       </Card>
 
-      {/* Stats Grid */}
+      {/* Stats */}
       <div className="grid md:grid-cols-4 gap-4">
         {stats.map((stat, idx) => (
           <Card
             key={idx}
-            className="p-5 shadow-soft hover:shadow-medium transition-all duration-300 animate-fade-in"
-            style={{ animationDelay: `${idx * 0.1}s` }}
+            className="p-5 shadow-soft hover:shadow-medium transition-all duration-300"
           >
             <p className="text-sm text-muted-foreground mb-2">{stat.label}</p>
             <p className="text-2xl font-bold mb-2">{stat.value}</p>
+
             <div
               className={`flex items-center gap-1 text-sm ${
                 stat.trend === "up" ? "text-success" : "text-destructive"
               }`}
             >
-              <TrendingUp
-                className={`w-4 h-4 ${
-                  stat.trend === "down" && "rotate-180"
-                }`}
-              />
-              <span>{stat.change}</span>
+              {stat.trend === "up" ? (
+                <TrendingUp className="w-4 h-4" />
+              ) : (
+                <TrendingDown className="w-4 h-4" />
+              )}
             </div>
           </Card>
         ))}
       </div>
 
-      {/* Income vs Expenses vs Savings */}
+      {/* Income / Expenses / Savings Bar Chart */}
       <Card className="p-6 shadow-soft">
-        <h3 className="text-xl font-semibold mb-6">
-          Income, Expenses & Savings Overview
-        </h3>
+        <h3 className="text-xl font-semibold mb-6">Financial Overview</h3>
+
         <ResponsiveContainer width="100%" height={350}>
-          <BarChart data={monthlyData}>
+          <BarChart data={monthly_overview}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
             <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
             <YAxis stroke="hsl(var(--muted-foreground))" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
-                borderRadius: "8px",
-              }}
-            />
+            <Tooltip />
             <Legend />
-            <Bar
-              dataKey="income"
-              fill="hsl(var(--success))"
-              radius={[8, 8, 0, 0]}
-              name="Income"
-            />
-            <Bar
-              dataKey="expenses"
-              fill="hsl(var(--destructive))"
-              radius={[8, 8, 0, 0]}
-              name="Expenses"
-            />
-            <Bar
-              dataKey="savings"
-              fill="hsl(var(--primary))"
-              radius={[8, 8, 0, 0]}
-              name="Savings"
-            />
+
+            <Bar dataKey="income" name="Income" fill="hsl(var(--success))" />
+            <Bar dataKey="expenses" name="Expenses" fill="hsl(var(--destructive))" />
+            <Bar dataKey="savings" name="Savings" fill="hsl(var(--primary))" />
           </BarChart>
         </ResponsiveContainer>
       </Card>
 
-      {/* Two Column Layout */}
+      {/* Two Column */}
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Savings Trend */}
         <Card className="p-6 shadow-soft">
           <h3 className="text-xl font-semibold mb-6">Savings Trend</h3>
+
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={monthlyData}>
+            <LineChart data={savings_trend}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-              <YAxis stroke="hsl(var(--muted-foreground))" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
+              <XAxis dataKey="month" />
+              <YAxis />
+              <Tooltip />
               <Line
                 type="monotone"
                 dataKey="savings"
                 stroke="hsl(var(--primary))"
                 strokeWidth={3}
-                dot={{ fill: "hsl(var(--primary))", r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </Card>
 
-        {/* Category Breakdown */}
+        {/* Expense Pie Chart */}
         <Card className="p-6 shadow-soft">
           <h3 className="text-xl font-semibold mb-6">
-            Expense Distribution (June)
+            Expense Distribution (Last Month)
           </h3>
+
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie
-                data={categoryData}
+                data={expense_distribution}
+                dataKey="amount"
+                nameKey="category"
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="value"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
+                outerRadius={90}
+                label={({ category, percent }) =>
+                  `${category}: ${(percent).toFixed(1)}%`
                 }
               >
-                {categoryData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                {expense_distribution.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "8px",
-                }}
-              />
+              <Tooltip />
             </PieChart>
           </ResponsiveContainer>
         </Card>
       </div>
 
-      {/* Summary Cards */}
+      {/* Best Month & Milestone */}
       <div className="grid md:grid-cols-2 gap-6">
-        <Card className="p-6 shadow-soft border-l-4 border-l-success bg-success/5">
+        {/* Best Performance */}
+        <Card className="p-6 shadow-soft border-l-4 border-success bg-success/10">
           <div className="flex items-start gap-4">
             <div className="bg-success/10 p-3 rounded-lg">
               <TrendingUp className="w-6 h-6 text-success" />
@@ -250,15 +274,15 @@ const ReportsView = () => {
             <div>
               <h4 className="font-semibold mb-2 text-lg">Best Performance</h4>
               <p className="text-sm text-muted-foreground mb-2">
-                Your highest savings month was <strong>June 2024</strong> with ₹52,550
-                saved.
+                Best month: <strong>{best_performance.month}</strong>  
+                with savings of ₹{best_performance.amount.toLocaleString()}
               </p>
-              <p className="text-xs text-success">Keep up the great work! 🎉</p>
             </div>
           </div>
         </Card>
 
-        <Card className="p-6 shadow-soft border-l-4 border-l-primary bg-primary/5">
+        {/* Milestone */}
+        <Card className="p-6 shadow-soft border-l-4 border-primary bg-primary/10">
           <div className="flex items-start gap-4">
             <div className="bg-primary/10 p-3 rounded-lg">
               <Calendar className="w-6 h-6 text-primary" />
@@ -266,11 +290,10 @@ const ReportsView = () => {
             <div>
               <h4 className="font-semibold mb-2 text-lg">Next Milestone</h4>
               <p className="text-sm text-muted-foreground mb-2">
-                You're on track to save <strong>₹2,80,000</strong> by the end of the
-                year.
+                Target: ₹{next_milestone.target.toLocaleString()}
               </p>
-              <p className="text-xs text-primary">
-                Only ₹46,450 more to reach your target! 💪
+              <p className="text-sm text-primary">
+                Remaining: ₹{next_milestone.remaining.toLocaleString()}
               </p>
             </div>
           </div>

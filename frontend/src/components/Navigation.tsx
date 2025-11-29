@@ -62,8 +62,8 @@ const Navigation = () => {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center shadow-soft">
-              <img src="/NoBg.png" alt="logo" className="w-6 h-6" />
+            <div>
+              <img src="/NoBg.png" alt="logo" className="w-10 h-10" />
             </div>
             <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               FinTrack AI

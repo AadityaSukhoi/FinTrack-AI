@@ -33,28 +33,19 @@ const About = () => {
   const team = [
     {
       name: "Aaditya Ranjan Moitra",
-      role: "CEO & Co-Founder",
       image: "👨‍💻",
-      bio: "Backend Developer",
+      role: "Backend Developer and DevOps Engineer",
     },
     {
       name: "Avnish Singh",
-      role: "CTO & Co-Founder",
       image: "👨‍💻",
-      bio: "Frontend Developer",
+      role: "Frontend Developer",
     },
     {
       name: "Dhruv Tiwari",
-      role: "Head of Product",
-      image: "👩‍🎨",
-      bio: "Product design leader from top tech companies",
+      image: "👨‍💻",
+      role: "Technical Documentation Specialist",
     },
-    // {
-    //   name: "David Martinez",
-    //   role: "Head of Engineering",
-    //   image: "👨‍🔧",
-    //   bio: "Full-stack architect with fintech expertise",
-    // },
   ];
 
   const stats = [
@@ -119,28 +110,22 @@ const About = () => {
               <p>
                 As college students passionate about technology and finance, we noticed a real
                 challenge in how people our age manage their money. Most finance apps we tried
-                were either too complicated to use or too limited to be truly helpful. None
-                really understood how students and young professionals handle daily expenses,
-                savings, or goals.
+                were either too complicated or too limited to be helpful.
               </p>
               <p>
                 That’s when the idea for FinTrack AI was born — a smart, intuitive finance app
-                designed by students, for students. We wanted to create something that could
-                analyze spending habits, provide meaningful insights, and make managing money
-                feel effortless and empowering.
+                designed by students, for students. We wanted something that could analyze
+                spending habits, provide meaningful insights, and simplify money management.
               </p>
               <p>
-                With a shared vision and a small but dedicated team of tech enthusiasts,
-                finance learners, and design thinkers, we started building FinTrack AI from
-                scratch — not as a commercial product, but as a mission to simplify personal
-                finance for everyone.
+                With a shared vision and a dedicated team of tech enthusiasts and design
+                thinkers, we built FinTrack AI from scratch — not just as a product, but as a
+                mission to empower people financially.
               </p>
               <p>
-                We’re still in the early stages of our journey, constantly learning,
-                improving, and evolving. FinTrack AI is more than an app — it’s our dream to
-                make financial wellness accessible to all. And this is just the beginning.
+                We're still growing, learning, and improving every day. FinTrack AI is more than
+                an app — it’s our dream to make financial wellness accessible to everyone.
               </p>
-
             </div>
           </div>
         </section>
@@ -174,7 +159,8 @@ const About = () => {
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center animate-slide-up">
             Meet Our Team
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto place-items-center">
             {team.map((member, index) => (
               <div
                 key={index}
@@ -186,7 +172,6 @@ const About = () => {
                 </div>
                 <h3 className="text-xl font-semibold mb-1">{member.name}</h3>
                 <p className="text-primary text-sm mb-2">{member.role}</p>
-                <p className="text-sm text-muted-foreground">{member.bio}</p>
               </div>
             ))}
           </div>
