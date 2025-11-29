@@ -14,9 +14,9 @@ npm install
 # 2. Build Frontend
 ########################################
 echo "🏗️ Building frontend..."
-npm run dev # Use 'dev' for development server; use 'build' for production build
+npm run build
 
 ########################################
-# 4. CI/CD Completed
+# 3. CI/CD Completed
 ########################################
 echo "🎉 CI/CD completed successfully!"
