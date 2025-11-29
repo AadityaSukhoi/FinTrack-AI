@@ -12,6 +12,7 @@ from backend.finance.routes_transactions import router as transactions_router
 from backend.finance.routes_categories import router as categories_router
 from backend.finance.routes_budgets import router as budgets_router
 from backend.finance.routes_forecast import router as forecast_router
+from backend.finance.routes_reports import router as reports_router
 
 from dotenv import load_dotenv
 
@@ -68,6 +69,9 @@ logger.info("✅ Budgets router included")
 
 app.include_router(forecast_router)
 logger.info("✅ Forecast router included")
+
+app.include_router(reports_router)
+logger.info("✅ Reports router included")
 
 
 # ---------- Root & Favicon ----------
