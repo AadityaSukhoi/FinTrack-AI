@@ -22,5 +22,5 @@ jobs:
 
       - name: Run CI/CD Shell Script
         run: |
-          chmod +x ./frontend/cicd.sh
-          ./cicd.sh
+          chmod +x frontend/cicd.sh
+          frontend/cicd.sh
