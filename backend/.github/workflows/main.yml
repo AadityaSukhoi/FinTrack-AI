@@ -1,0 +1,23 @@
+name: FinTrackAI CI/CD
+
+on:
+  push:
+    branches: ["main", "backend"]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Python (Backend)
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Run CI/CD Shell Script
+        run: |
+          chmod +x ./cicd.sh
+          ./cicd.sh

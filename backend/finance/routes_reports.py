@@ -9,9 +9,7 @@ from backend.auth.models import User
 from backend.finance.models import Transaction
 from backend.utils.cache import Cache
 
-router = APIRouter(prefix="/reports", tags=["Reports"])
-
-
+router = APIRouter(prefix="/api/reports", tags=["Reports"])
 
 @router.get("/")
 def get_reports(
@@ -40,7 +38,20 @@ def get_reports(
     )
 
     if not txns:
-        return {"message": "No financial data available."}
+        return {
+            "summary": {
+                "total_income": 0,
+                "total_expenses": 0,
+                "total_savings": 0,
+                "average_monthly_savings": 0,
+            },
+            "monthly_overview": [],
+            "savings_trend": [],
+            "expense_distribution": [],
+            "best_performance": {"month": None, "amount": 0},
+            "next_milestone": {"target": 0, "remaining": 0},
+        }
+
 
     # -------------------------------------------
     # Determine window

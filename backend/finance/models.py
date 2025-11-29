@@ -94,28 +94,3 @@ class Budget(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     user = relationship("User", backref="budgets")
-
-
-class Goal(Base):
-    __tablename__ = "goals"
-
-    id = Column(String, primary_key=True, index=True)
-    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
-
-    name = Column(String, nullable=False)
-    target_amount = Column(Float, nullable=False)
-    current_amount = Column(Float, default=0.0)
-    deadline = Column(DateTime, nullable=True)
-    category = Column(String, nullable=True)
-
-    color = Column(String, default="#10b981")
-    icon = Column(String, nullable=True)
-    completed = Column(String, default="false")
-
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    user = relationship("User", backref="goals")
-
-
-SavingsGoal = Goal
