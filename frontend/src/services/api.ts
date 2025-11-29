@@ -188,7 +188,7 @@ export const deleteBudget = (id: string) =>
 // ==================== FORECASTING ====================
 export const getForecast = () => api.get("/forecast");
 
-// ==================== REPORTS (FIXED ONCE AND FOR ALL) ====================
+// ==================== REPORTS ====================
 export const getReports = (months: number = 6) =>
   api.get("/reports", { params: { months } });
 
