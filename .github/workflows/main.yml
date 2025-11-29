@@ -4,9 +4,6 @@ on:
   push:
     branches: ["main", "frontend"]
 
-permissions:
-  contents: read
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,9 +15,9 @@ jobs:
       - name: Setup Node (Frontend)
         uses: actions/setup-node@v4
         with:
-          node-version: "18"
+          node-version: "20.19.0"
 
-      - name: Run CI/CD Shell Script
+      - name: Run Frontend CI Script
         run: |
           chmod +x frontend/cicd.sh
           frontend/cicd.sh
