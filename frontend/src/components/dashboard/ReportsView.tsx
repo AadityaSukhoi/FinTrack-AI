@@ -275,7 +275,7 @@ const ReportsView = () => {
               <h4 className="font-semibold mb-2 text-lg">Best Performance</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 Best month: <strong>{best_performance.month}</strong>  
-                with savings of ₹{best_performance.amount.toLocaleString()}
+                 with savings of ₹{best_performance.amount.toLocaleString()}
               </p>
             </div>
           </div>
